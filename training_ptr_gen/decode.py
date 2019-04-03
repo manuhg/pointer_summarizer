@@ -3,11 +3,11 @@
 from __future__ import unicode_literals, print_function, division
 
 import sys
+import os
 
 reload(sys)
 sys.setdefaultencoding('utf8')
 sys.path.append(str(os.path.expanduser("..")))
-import os
 import time
 
 import torch
