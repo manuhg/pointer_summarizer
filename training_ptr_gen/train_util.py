@@ -1,7 +1,7 @@
 from torch.autograd import Variable
 import sys
 import os
-sys.path.append(str(os.path.expanduser("..")))
+sys.path.append(str(".."))
 import numpy as np
 import torch
 from data_util import config

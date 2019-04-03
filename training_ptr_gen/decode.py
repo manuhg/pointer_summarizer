@@ -7,7 +7,7 @@ import os
 
 reload(sys)
 sys.setdefaultencoding('utf8')
-sys.path.append(str(os.path.expanduser("..")))
+sys.path.append(str(".."))
 import time
 
 import torch
