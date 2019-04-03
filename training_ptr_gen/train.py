@@ -4,6 +4,7 @@ import os
 import time
 import argparse
 
+sys.path.append(str(os.path.expanduser("..")))
 import tensorflow as tf
 import torch
 from model import Model

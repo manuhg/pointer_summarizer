@@ -6,7 +6,7 @@ import sys
 
 reload(sys)
 sys.setdefaultencoding('utf8')
-
+sys.path.append(str(os.path.expanduser("..")))
 import os
 import time
 

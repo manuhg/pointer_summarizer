@@ -1,5 +1,7 @@
 from __future__ import unicode_literals, print_function, division
-
+import sys
+import os
+sys.path.append(str(os.path.expanduser("..")))
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
