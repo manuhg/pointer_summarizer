@@ -18,6 +18,8 @@ from data_util.utils import calc_running_avg_loss
 from train_util import get_input_from_batch, get_output_from_batch
 
 use_cuda = config.use_gpu and torch.cuda.is_available()
+os.path.append('..')
+
 
 class Train(object):
     def __init__(self):
@@ -26,7 +28,8 @@ class Train(object):
                                batch_size=config.batch_size, single_pass=False)
         time.sleep(15)
 
-        train_dir = os.path.join(config.log_root, 'train_%d' % (int(time.time())))
+        train_dir = os.path.join(
+            config.log_root, 'train_%d' % (int(time.time())))
         if not os.path.exists(train_dir):
             os.mkdir(train_dir)
 
@@ -45,21 +48,24 @@ class Train(object):
             'optimizer': self.optimizer.state_dict(),
             'current_loss': running_avg_loss
         }
-        model_save_path = os.path.join(self.model_dir, 'model_%d_%d' % (iter, int(time.time())))
+        model_save_path = os.path.join(
+            self.model_dir, 'model_%d_%d' % (iter, int(time.time())))
         torch.save(state, model_save_path)
 
     def setup_train(self, model_file_path=None):
         self.model = Model(model_file_path)
 
         params = list(self.model.encoder.parameters()) + list(self.model.decoder.parameters()) + \
-                 list(self.model.reduce_state.parameters())
+            list(self.model.reduce_state.parameters())
         initial_lr = config.lr_coverage if config.is_coverage else config.lr
-        self.optimizer = Adagrad(params, lr=initial_lr, initial_accumulator_value=config.adagrad_init_acc)
+        self.optimizer = Adagrad(
+            params, lr=initial_lr, initial_accumulator_value=config.adagrad_init_acc)
 
         start_iter, start_loss = 0, 0
 
         if model_file_path is not None:
-            state = torch.load(model_file_path, map_location= lambda storage, location: storage)
+            state = torch.load(
+                model_file_path, map_location=lambda storage, location: storage)
             start_iter = state['iter']
             start_loss = state['current_loss']
 
@@ -81,24 +87,27 @@ class Train(object):
 
         self.optimizer.zero_grad()
 
-        encoder_outputs, encoder_feature, encoder_hidden = self.model.encoder(enc_batch, enc_lens)
+        encoder_outputs, encoder_feature, encoder_hidden = self.model.encoder(
+            enc_batch, enc_lens)
         s_t_1 = self.model.reduce_state(encoder_hidden)
 
         step_losses = []
         for di in range(min(max_dec_len, config.max_dec_steps)):
             y_t_1 = dec_batch[:, di]  # Teacher forcing
             final_dist, s_t_1,  c_t_1, attn_dist, p_gen, next_coverage = self.model.decoder(y_t_1, s_t_1,
-                                                        encoder_outputs, encoder_feature, enc_padding_mask, c_t_1,
-                                                        extra_zeros, enc_batch_extend_vocab,
-                                                                           coverage, di)
+                                                                                            encoder_outputs, encoder_feature, enc_padding_mask, c_t_1,
+                                                                                            extra_zeros, enc_batch_extend_vocab,
+                                                                                            coverage, di)
             target = target_batch[:, di]
-            gold_probs = torch.gather(final_dist, 1, target.unsqueeze(1)).squeeze()
+            gold_probs = torch.gather(
+                final_dist, 1, target.unsqueeze(1)).squeeze()
             step_loss = -torch.log(gold_probs + config.eps)
             if config.is_coverage:
-                step_coverage_loss = torch.sum(torch.min(attn_dist, coverage), 1)
+                step_coverage_loss = torch.sum(
+                    torch.min(attn_dist, coverage), 1)
                 step_loss = step_loss + config.cov_loss_wt * step_coverage_loss
                 coverage = next_coverage
-                
+
             step_mask = dec_padding_mask[:, di]
             step_loss = step_loss * step_mask
             step_losses.append(step_loss)
@@ -109,9 +118,11 @@ class Train(object):
 
         loss.backward()
 
-        self.norm = clip_grad_norm_(self.model.encoder.parameters(), config.max_grad_norm)
+        self.norm = clip_grad_norm_(
+            self.model.encoder.parameters(), config.max_grad_norm)
         clip_grad_norm_(self.model.decoder.parameters(), config.max_grad_norm)
-        clip_grad_norm_(self.model.reduce_state.parameters(), config.max_grad_norm)
+        clip_grad_norm_(self.model.reduce_state.parameters(),
+                        config.max_grad_norm)
 
         self.optimizer.step()
 
@@ -124,7 +135,8 @@ class Train(object):
             batch = self.batcher.next_batch()
             loss = self.train_one_batch(batch)
 
-            running_avg_loss = calc_running_avg_loss(loss, running_avg_loss, self.summary_writer, iter)
+            running_avg_loss = calc_running_avg_loss(
+                loss, running_avg_loss, self.summary_writer, iter)
             iter += 1
 
             if iter % 100 == 0:
@@ -137,14 +149,15 @@ class Train(object):
             if iter % 5000 == 0:
                 self.save_model(running_avg_loss, iter)
 
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="Train script")
     parser.add_argument("-m",
-                        dest="model_file_path", 
+                        dest="model_file_path",
                         required=False,
                         default=None,
                         help="Model file for retraining (default: None).")
     args = parser.parse_args()
-    
+
     train_processor = Train()
     train_processor.trainIters(config.max_iterations, args.model_file_path)
