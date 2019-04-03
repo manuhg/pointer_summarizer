@@ -3,7 +3,7 @@ from __future__ import unicode_literals, print_function, division
 import os
 import time
 import sys
-sys.path.append(str(".."))
+
 import tensorflow as tf
 import torch
 
